@@ -1,2 +1,2 @@
-# smacutils
-Utils for Scala macros
+# smacrotools
+Utilities for Scala macros.

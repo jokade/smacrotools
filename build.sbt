@@ -3,7 +3,7 @@
 lazy val commonSettings = Seq(
   organization := "biz.enef",
   version := "0.1-SNAPSHOT",
-  scalaVersion := "2.11.5",
+  scalaVersion := "2.11.6",
   scalacOptions ++= Seq("-deprecation","-feature","-Xlint")
 )
 
@@ -13,13 +13,30 @@ lazy val root = project.in(file(".")).
   settings(publishingSettings: _*).
   //settings(sonatypeSettings: _*).
   settings( 
-    name := "smacutils",
+    name := "smacrotools",
     libraryDependencies ++= Seq(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value
     ),
     resolvers += Resolver.sonatypeRepo("releases")
   )
 
+/*
+lazy val testMacros = project.
+  dependsOn(root).
+  settings(commonSettings:_*).
+  settings(
+    publish := {},
+    publishLocal := {}
+  )
+
+lazy val tests = project.
+  dependsOn(testMacros).
+  settings(commonSettings:_*).
+  settings(
+    publish := {},
+    publishLocal := {}
+  )
+*/
 
 lazy val publishingSettings = Seq(
   publishMavenStyle := true,
@@ -31,7 +48,7 @@ lazy val publishingSettings = Seq(
       Some("releases"  at nexus + "service/local/staging/deploy/maven2")
   },
   pomExtra := (
-    <url>https://github.com/jokade/smacutils</url>
+    <url>https://github.com/jokade/smacrotools</url>
     <licenses>
       <license>
         <name>MIT License</name>
@@ -39,8 +56,8 @@ lazy val publishingSettings = Seq(
       </license>
     </licenses>
     <scm>
-      <url>git@github.com:jokade/smacutils</url>
-      <connection>scm:git:git@github.com:jokade/smacutils.git</connection>
+      <url>git@github.com:jokade/smacrotools</url>
+      <connection>scm:git:git@github.com:jokade/smacrotools.git</connection>
     </scm>
     <developers>
       <developer>
