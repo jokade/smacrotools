@@ -4,18 +4,33 @@
 // Distributed under the MIT License (see included file LICENSE)
 package biz.enef.smacrotools
 
-import scala.annotation.StaticAnnotation
 import scala.language.experimental.macros
 import scala.language.reflectiveCalls
-import scala.reflect.macros.{Typers, Universe, Aliases, Internals}
+import scala.reflect.macros._
 
 abstract class CommonMacroTools {
   type UniverseProvider = {
     val universe: Universe
   }
-  val c: UniverseProvider with Internals with Aliases with Typers
+  val c: UniverseProvider with Internals with Aliases with Typers with Infrastructure with FrontEnds with Enclosures
 
   import c.universe._
+
+  private lazy val _settings = c.settings.map(_.split("=") match {
+    case Array(flag) => (flag,"")
+    case Array(flag,value) => (flag,value)
+  }).toMap
+
+  /**
+   * Returns true if the specified macro-setting is defined as an option to scalac
+   *
+   * @param flag
+   */
+  protected def isSet(flag: String) : Boolean = _settings.contains(flag)
+
+  protected def printTree(tree: Tree) = {
+    println( showCode(tree) )
+  }
 
   /**
    * Returns the full path name of the enclosing package (at the current position),
@@ -52,6 +67,5 @@ abstract class CommonMacroTools {
       }
     case _ => Map()
   }
-
-
 }
+
