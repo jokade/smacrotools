@@ -14,7 +14,11 @@ abstract class WhiteboxMacroTools extends CommonMacroTools {
                         params: Iterable[Tree],
                         parents: Iterable[Tree],
                         body: Iterable[Tree],
-                        fullName: String)
+                        fullName: String,
+                        modifiers: Modifiers,
+                        isClass: Boolean) {
+    def isCase = modifiers.hasFlag(Flag.CASE)
+  }
 
   /**
    * Extracts the name, constructor parameters, parent types (extends), and the body of the specified class declaration.
@@ -22,8 +26,12 @@ abstract class WhiteboxMacroTools extends CommonMacroTools {
    * @param classDecl
    */
   def extractClassParts(classDecl: ClassDef) : ClassParts = classDecl match {
-    case q"class $className(..$fields) extends ..$parents { ..$body }" =>
+    case q"$mods class $className(..$fields) extends ..$parents { ..$body }" =>
       val fullName = getEnclosingNamespace().map( ns => s"$ns.$className" ).getOrElse(className.toString)
-      ClassParts(className, fields, parents, body, fullName)
+      ClassParts(className, fields, parents, body, fullName, mods, true)
+    case q"$mods trait $traitName extends ..$parents { ..$body }" =>
+      val fullName = getEnclosingNamespace().map( ns => s"$ns.$traitName" ).getOrElse(traitName.toString)
+      ClassParts(traitName, Nil, parents, body, fullName, mods, false)
+
   }
 }

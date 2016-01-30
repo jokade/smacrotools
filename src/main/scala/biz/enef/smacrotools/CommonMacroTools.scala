@@ -42,6 +42,14 @@ abstract class CommonMacroTools {
   }
 
   /**
+   * Takes a tree and returns the fully qualified name of its type.
+   *
+   * @param tree
+   * @return
+   */
+  protected[this] def getQualifiedTypeName(tree: Tree) : String = c.typecheck(tree,c.TYPEmode).tpe.toString
+
+  /**
    * Takes a tree representing an annotation value and a list with the names of all valid parameter names for this
    * annotation (in the correct order), and returns a map containing the tree for each specified parameter, or None
    * for unspecified parameters.
