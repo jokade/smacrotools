@@ -73,6 +73,7 @@ abstract class CommonMacroTools {
         assert( m.keys.forall( k => paramNames.contains(k) ))
         m
       }
+    case q"new $name()" => paramNames.map( (_,None) ).toMap
     case _ => Map()
   }
 }
