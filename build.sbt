@@ -8,6 +8,7 @@ lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
     "org.scala-lang" % "scala-reflect" % scalaVersion.value
     ),
+  addCompilerPlugin("org.scalamacros" % "paradise" % "2.0.1" cross CrossVersion.full),
   resolvers += Resolver.sonatypeRepo("releases")
 )
 
@@ -32,27 +33,19 @@ lazy val js = project
   .settings(commonSettings:_*)
   .settings(publishingSettings:_*)
   .settings(
+    name := "smacrotools-sjs",
     unmanagedSourceDirectories in Compile += baseDirectory.value / ".." / "shared" / "src" / "main" / "scala"
   )
 
-
-/*
-lazy val testMacros = project.
-  dependsOn(root).
-  settings(commonSettings:_*).
-  settings(
+lazy val jstest = project
+  .enablePlugins(ScalaJSPlugin)
+  .dependsOn(js)
+  .settings(commonSettings:_*)
+  .settings(
     publish := {},
     publishLocal := {}
   )
 
-lazy val tests = project.
-  dependsOn(testMacros).
-  settings(commonSettings:_*).
-  settings(
-    publish := {},
-    publishLocal := {}
-  )
-*/
 
 lazy val publishingSettings = Seq(
   publishMavenStyle := true,

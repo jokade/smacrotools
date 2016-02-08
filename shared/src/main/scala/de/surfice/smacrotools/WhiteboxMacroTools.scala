@@ -18,6 +18,8 @@ abstract class WhiteboxMacroTools extends CommonMacroTools {
                         modifiers: Modifiers,
                         isClass: Boolean) {
     def isCase = modifiers.hasFlag(Flag.CASE)
+    def isTrait = modifiers.hasFlag(Flag.TRAIT)
+    def isSubtypeOf(t: Type) : Boolean = parents.exists( p => c.typecheck(p,c.TYPEmode).tpe.<:<(t))
   }
 
   /**
