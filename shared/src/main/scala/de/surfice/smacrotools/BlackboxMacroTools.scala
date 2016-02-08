@@ -2,7 +2,7 @@
 // Description: Utility functions for blackbox macros
 //
 // Distributed under the MIT License (see included file LICENSE)
-package biz.enef.smacrotools
+package de.surfice.smacrotools
 
 import scala.reflect.macros.blackbox
 import scala.language.experimental.macros

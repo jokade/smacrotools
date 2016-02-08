@@ -1,24 +1,40 @@
-//import SonatypeKeys._
 
 lazy val commonSettings = Seq(
-  organization := "biz.enef",
+  organization := "de.surfice",
   version := "0.1-SNAPSHOT",
-  scalaVersion := "2.11.6",
-  scalacOptions ++= Seq("-deprecation","-feature","-Xlint")
+  name := "smacrotools",
+  scalaVersion := "2.11.7",
+  scalacOptions ++= Seq("-deprecation","-feature","-Xlint"),
+  libraryDependencies ++= Seq(
+    "org.scala-lang" % "scala-reflect" % scalaVersion.value
+    ),
+  resolvers += Resolver.sonatypeRepo("releases")
 )
 
 
-lazy val root = project.in(file(".")).
-  settings(commonSettings: _*).
-  settings(publishingSettings: _*).
-  //settings(sonatypeSettings: _*).
-  settings( 
-    name := "smacrotools",
-    libraryDependencies ++= Seq(
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value
-    ),
-    resolvers += Resolver.sonatypeRepo("releases")
+lazy val root = project.in(file("."))
+  .aggregate(jvm,js)
+  .settings(commonSettings:_*)
+  .settings(
+    publish := {},
+    publishLocal := {}
   )
+
+lazy val jvm = project
+  .settings(commonSettings:_*)
+  .settings(publishingSettings: _*)
+  .settings(
+     unmanagedSourceDirectories in Compile += baseDirectory.value / ".." / "shared" / "src" / "main" / "scala"
+   )
+
+lazy val js = project
+  .enablePlugins(ScalaJSPlugin)
+  .settings(commonSettings:_*)
+  .settings(publishingSettings:_*)
+  .settings(
+    unmanagedSourceDirectories in Compile += baseDirectory.value / ".." / "shared" / "src" / "main" / "scala"
+  )
+
 
 /*
 lazy val testMacros = project.

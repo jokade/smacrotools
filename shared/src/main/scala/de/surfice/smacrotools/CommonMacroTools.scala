@@ -2,7 +2,7 @@
 // Description: Common utility functions for blackbox and whitebox macros
 //
 // Distributed under the MIT License (see included file LICENSE)
-package biz.enef.smacrotools
+package de.surfice.smacrotools
 
 import scala.language.experimental.macros
 import scala.language.reflectiveCalls

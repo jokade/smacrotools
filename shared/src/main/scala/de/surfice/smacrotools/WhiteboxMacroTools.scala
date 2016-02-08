@@ -2,7 +2,7 @@
 // Description: Utility functions for whitebox macros
 //
 // Distributed under the MIT License (see included file LICENSE)
-package biz.enef.smacrotools
+package de.surfice.smacrotools
 
 import scala.reflect.macros.whitebox
 
