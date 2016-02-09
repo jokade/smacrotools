@@ -30,4 +30,15 @@ trait JsCommonMacroTools {
       case xs => xs
     }).foldLeft(q"scalajs.js.Dynamic.global":Tree)((b,name) => q"""$b.selectDynamic($name)""")
 
+//  def jsNameAnnotation(modifiers: Modifiers): Option[TermName] = modifiers.annotations.collectFirst{
+//    case q"new $name(..$params)" if name.toString.endsWith("JSName") => params.head
+//  }
+
+  object JSName {
+    def unapply(modifiers: Modifiers): Option[TermName] = modifiers.annotations.collectFirst {
+      case q"new $name(..$params)" if name.toString.endsWith("JSName") => params.head
+    } collect {
+      case Literal(Constant(name: String)) => TermName(name)
+    }
+  }
 }

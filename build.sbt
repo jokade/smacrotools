@@ -4,7 +4,9 @@ lazy val commonSettings = Seq(
   version := "0.1-SNAPSHOT",
   name := "smacrotools",
   scalaVersion := "2.11.7",
-  scalacOptions ++= Seq("-deprecation","-feature","-Xlint"),
+  scalacOptions ++= Seq("-deprecation","-feature","-Xlint"
+    , "-Xmacro-settings:de.surfice.smacrotools.debug"
+    ),
   libraryDependencies ++= Seq(
     "org.scala-lang" % "scala-reflect" % scalaVersion.value
     ),
