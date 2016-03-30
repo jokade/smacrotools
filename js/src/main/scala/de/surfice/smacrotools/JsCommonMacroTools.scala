@@ -24,6 +24,7 @@ trait JsCommonMacroTools {
    *
    * @param fullName
    */
+  // TODO: move angulate2 specific code to angulate!
   def selectGlobalDynamic(fullName: String) : Tree =
     (fullName.split("\\.").toList match {
       case "angulate2" :: xs => "ng" :: xs

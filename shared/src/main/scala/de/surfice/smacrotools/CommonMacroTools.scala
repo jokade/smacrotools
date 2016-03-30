@@ -76,5 +76,12 @@ abstract class CommonMacroTools {
     case q"new $name()" => paramNames.map( (_,None) ).toMap
     case _ => Map()
   }
+
+  /**
+   * Takes a sequence of parameter definition trees and returns the corresponding parameter names.
+   */
+  protected[this] def paramNames(params: Iterable[Tree]): Iterable[TermName] = params map {
+    case q"$mods val $name: $tpe = $rhs" => name
+  }
 }
 
