@@ -3,14 +3,14 @@ lazy val commonSettings = Seq(
   organization := "de.surfice",
   version := "0.1-SNAPSHOT",
   name := "smacrotools",
-  scalaVersion := "2.11.7",
+  scalaVersion := "2.11.8",
   scalacOptions ++= Seq("-deprecation","-feature","-Xlint"
     , "-Xmacro-settings:de.surfice.smacrotools.debug"
     ),
   libraryDependencies ++= Seq(
     "org.scala-lang" % "scala-reflect" % scalaVersion.value
     ),
-  addCompilerPlugin("org.scalamacros" % "paradise" % "2.0.1" cross CrossVersion.full),
+  addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
   resolvers += Resolver.sonatypeRepo("releases")
 )
 

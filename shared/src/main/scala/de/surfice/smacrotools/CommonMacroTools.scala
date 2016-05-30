@@ -26,11 +26,15 @@ abstract class CommonMacroTools {
    *
    * @param flag
    */
-  protected def isSet(flag: String) : Boolean = _settings.contains(flag)
+  protected[this] def isSet(flag: String) : Boolean = _settings.contains(flag)
 
-  protected def printTree(tree: Tree) = {
+  protected[this] def setting(flag: String, default: String): String = _settings.getOrElse(flag,default)
+
+  protected[this] def printTree(tree: Tree) = {
     println( showCode(tree) )
   }
+
+  protected[this] def error(msg: String) = c.error(c.enclosingPosition,msg)
 
   /**
    * Returns the full path name of the enclosing package (at the current position),
@@ -50,6 +54,18 @@ abstract class CommonMacroTools {
   protected[this] def getQualifiedTypeName(tree: Tree) : String = c.typecheck(tree,c.TYPEmode).tpe.toString
 
   /**
+   * Returns the tree for the first annotation of the specified type found on the symbol, or None.
+   *
+   * @param symbol Symbol to be searched for the specified annotation type
+   * @param annotation Fully qualified name of the annotation type
+   */
+  protected[this] def findAnnotation(symbol: Symbol, annotation: String): Option[Tree] =
+    symbol.annotations.map(_.tree).collectFirst{
+      case a @ q"new $name( ..$params )" if name.toString == annotation => a
+      case a @ q"new $name()" if name.toString == annotation => a
+    }
+
+  /**
    * Takes a tree representing an annotation value and a list with the names of all valid parameter names for this
    * annotation (in the correct order), and returns a map containing the tree for each specified parameter, or None
    * for unspecified parameters.
@@ -59,6 +75,7 @@ abstract class CommonMacroTools {
    *
    */
   // TODO: check if this function can be used for all (scala) annotations
+  // TODO: change signature: 'None' will never be returned for an undefined parameter; instead we will recevie the default value
   protected[this] def extractAnnotationParameters(tree: Tree, paramNames: Seq[String]) : Map[String,Option[Tree]] = tree match {
     case q"new $name( ..$params )" =>
       if(paramNames.size < params.size)
@@ -78,10 +95,50 @@ abstract class CommonMacroTools {
   }
 
   /**
+   * Checks if the provided symbol is annotated with the specified type and returns the trees for
+   * all arguments of this annotation.
+   *
+   * @param symbol Symbol to be checked for the annotation
+   * @param annotation fully qualified name of the annotation
+   * @param paramNames list with all allowed parameter names of the annotation (in the correct order)
+   */
+  protected[this] def extractAnnotationParameters(symbol: Symbol, annotation: String, paramNames: Seq[String]) : Option[Map[String,Option[Tree]]] =
+    findAnnotation(symbol,annotation) map (t => extractAnnotationParameters(t,paramNames))
+
+  /**
    * Takes a sequence of parameter definition trees and returns the corresponding parameter names.
    */
   protected[this] def paramNames(params: Iterable[Tree]): Iterable[TermName] = params map {
     case q"$mods val $name: $tpe = $rhs" => name
   }
+
+  protected[this] def extractStringConstant(arg: Tree): Option[String] = arg match {
+    case Constant(Literal(value)) => Some(value.toString)
+    case Literal(Constant(value:String)) => Some(value)
+    case x => println(x.getClass)
+      None
+  }
+
+  /**
+   * Returns the debug configuration from the provided modifiers
+   * @param modifiers
+   * @return
+   */
+  def getDebugConfig(modifiers: Modifiers): debug.DebugConfig = modifiers.annotations collectFirst {
+    case d @ Apply((q"new debug",_)) =>
+      val args = extractAnnotationParameters(d:Tree,Seq("showExpansion","logInstances"))
+      debug.DebugConfig(
+        booleanDebugArg(args,"showExpansion"),
+        booleanDebugArg(args,"logInstances")
+      )
+  } getOrElse debug.defaultDebugConfig
+
+  private def booleanDebugArg(args: Map[String,Option[Tree]], name: String): Boolean = args(name) match {
+    case None => true
+    case Some(q"false") => false
+    case Some(q"true") => true
+    case x => c.abort(c.enclosingPosition,s"Invalid value for @debug parameter $name: $x (must be true or false)")
+  }
+
 }
 

@@ -7,8 +7,8 @@ package de.surfice.smacrotools
 import scala.language.experimental.macros
 import scala.language.reflectiveCalls
 
-trait JsCommonMacroTools {
-  this: CommonMacroTools =>
+trait JsCommonMacroTools extends CommonMacroTools {
+//  this: CommonMacroTools =>
 
   import c.universe._
 
@@ -17,7 +17,7 @@ trait JsCommonMacroTools {
    *
    * @tparam T
    */
-  def selectGlobalDynamic[T: c.WeakTypeTag] : Tree = selectGlobalDynamic( weakTypeOf[T].typeSymbol.fullName )
+  protected[this] def selectGlobalDynamic[T: c.WeakTypeTag] : Tree = selectGlobalDynamic( weakTypeOf[T].typeSymbol.fullName )
 
   /**
    * Returns a Tree that represents a type or object (specified by its fully qualified name) as a `js.Dynamic`.
@@ -25,11 +25,8 @@ trait JsCommonMacroTools {
    * @param fullName
    */
   // TODO: move angulate2 specific code to angulate!
-  def selectGlobalDynamic(fullName: String) : Tree =
-    (fullName.split("\\.").toList match {
-      case "angulate2" :: xs => "ng" :: xs
-      case xs => xs
-    }).foldLeft(q"scalajs.js.Dynamic.global":Tree)((b,name) => q"""$b.selectDynamic($name)""")
+  protected[this] def selectGlobalDynamic(fullName: String) : Tree =
+    fullName.split("\\.").toList.foldLeft(q"scalajs.js.Dynamic.global":Tree)((b,name) => q"""$b.selectDynamic($name)""")
 
 //  def jsNameAnnotation(modifiers: Modifiers): Option[TermName] = modifiers.annotations.collectFirst{
 //    case q"new $name(..$params)" if name.toString.endsWith("JSName") => params.head

@@ -92,7 +92,7 @@ object JSOptionsObject {
               }
               object ${name.toTermName} {
                 def apply(..${members map (_._1)}) = {
-                  val __o = scalajs.js.Dynamic.literal(..$literalArgs).asInstanceOf[js.Dictionary[js.Any]]
+                  val __o = scalajs.js.Dynamic.literal(..$literalArgs).asInstanceOf[scalajs.js.Dictionary[scalajs.js.Any]]
                   ..$assignIfDefined
                   __o.asInstanceOf[$name]
                 }
