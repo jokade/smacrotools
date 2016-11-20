@@ -60,7 +60,10 @@ abstract class CommonMacroTools {
    * @param annotation Fully qualified name of the annotation type
    */
   protected[this] def findAnnotation(symbol: Symbol, annotation: String): Option[Tree] =
-    symbol.annotations.map(_.tree).collectFirst{
+    findAnnotation(symbol.annotations.map(_.tree),annotation)
+
+  protected[this] def findAnnotation(annotations: Seq[Tree], annotation: String): Option[Tree] =
+    annotations.collectFirst{
       case a @ q"new $name( ..$params )" if name.toString == annotation => a
       case a @ q"new $name()" if name.toString == annotation => a
     }
@@ -73,7 +76,10 @@ abstract class CommonMacroTools {
    * @param symbol type symbol to be parsed for annotations
    */
   protected[this] def findAnnotations(symbol: Symbol): Seq[(String,Tree)] =
-    symbol.annotations.map(_.tree).collect{
+    findAnnotations(symbol.annotations.map(_.tree))
+
+  protected[this] def findAnnotations(annotations: Seq[Tree]): Seq[(String,Tree)] =
+    annotations.collect{
       case a @ q"new $name( ..$params )" => (name.toString,a)
       case a @ q"new $name()" => (name.toString,a)
     }
