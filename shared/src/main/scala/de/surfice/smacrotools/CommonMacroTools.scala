@@ -66,22 +66,35 @@ abstract class CommonMacroTools {
     }
 
   /**
+   * Returns a list of tuples containing all annotations found on the specified symbol.
+   * The first element of each tuple is the fully qualified annotation name,
+   * the second element represents the annotation tree.
+   *
+   * @param symbol type symbol to be parsed for annotations
+   */
+  protected[this] def findAnnotations(symbol: Symbol): Seq[(String,Tree)] =
+    symbol.annotations.map(_.tree).collect{
+      case a @ q"new $name( ..$params )" => (name.toString,a)
+      case a @ q"new $name()" => (name.toString,a)
+    }
+
+  /**
    * Takes a tree representing an annotation value and a list with the names of all valid parameter names for this
    * annotation (in the correct order), and returns a map containing the tree for each specified parameter, or None
    * for unspecified parameters.
    *
-   * @param tree complete annotation tree
+   * @param annotation complete annotation tree
    * @param paramNames list with all allowed parameter names (in the correct order)
    *
    */
   // TODO: check if this function can be used for all (scala) annotations
   // TODO: change signature: 'None' will never be returned for an undefined parameter; instead we will recevie the default value
-  protected[this] def extractAnnotationParameters(tree: Tree, paramNames: Seq[String]) : Map[String,Option[Tree]] = tree match {
+  protected[this] def extractAnnotationParameters(annotation: Tree, paramNames: Seq[String]) : Map[String,Option[Tree]] = annotation match {
     case q"new $name( ..$params )" =>
       if(paramNames.size < params.size)
         throw new Exception("received more annotation parameters than defined (check Seq passed to paramNames)!")
       else {
-        c.typecheck(tree.duplicate)
+        c.typecheck(annotation.duplicate)
         val m = paramNames.map((_, None)).toMap[String, Option[Tree]] ++
           paramNames.zip(params).map({
             case (name, q"$p = $rhs") => (p.toString, Some(rhs))
@@ -93,6 +106,8 @@ abstract class CommonMacroTools {
     case q"new $name()" => paramNames.map( (_,None) ).toMap
     case _ => Map()
   }
+
+
 
   /**
    * Checks if the provided symbol is annotated with the specified type and returns the trees for
