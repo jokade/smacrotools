@@ -4,7 +4,7 @@
 // Distributed under the MIT License (see included file LICENSE)
 package de.surfice.smacrotools
 
-abstract class JsWhiteboxMacroTools extends WhiteboxMacroTools with JsCommonMacroTools {
+trait JsWhiteboxMacroTools extends WhiteboxMacroTools with JsCommonMacroTools {
   import c.universe._
 
   def getJSBaseClass(parents: Iterable[c.Tree]) : Iterable[c.Tree] = parents match {
