@@ -11,34 +11,58 @@ abstract class WhiteboxMacroTools extends CommonMacroTools {
   import c.universe._
 
   sealed trait CommonParts {
-    def parents: Iterable[Tree]
-    def body: Iterable[Tree]
+    def parents: Seq[Tree]
+    def body: Seq[Tree]
     def modifiers: Modifiers
     def fullName: String
     def isClass: Boolean
-    def isCase: Boolean
-    def isTrait: Boolean
     def isObject: Boolean
+    def isCase: Boolean = modifiers.hasFlag(Flag.CASE)
+    def isTrait: Boolean = modifiers.hasFlag(Flag.TRAIT)
+    def isSubtypeOf(t: Type) : Boolean = parents.exists( p => c.typecheck(p,c.TYPEmode).tpe.<:<(t))
+    val earlyDefns: Iterable[Tree] = Nil
+  }
+
+  sealed trait TypeParts extends CommonParts {
+    def name: TypeName
+    def tparams: Seq[Tree]
+    def self: Tree
+    def companion: Option[ObjectParts]
   }
 
   case class ClassParts(name: TypeName,
-                        params: Iterable[Tree],
-                        parents: Iterable[Tree],
-                        body: Iterable[Tree],
+                        tparams: Seq[Tree],
+                        params: Seq[Tree],
+                        parents: Seq[Tree],
+                        self: Tree,
+                        body: Seq[Tree],
                         fullName: String,
                         modifiers: Modifiers,
-                        isClass: Boolean) extends CommonParts {
-    override def isCase: Boolean = modifiers.hasFlag(Flag.CASE)
-    override def isTrait: Boolean = modifiers.hasFlag(Flag.TRAIT)
+                        ctorMods: Modifiers,
+                        companion: Option[ObjectParts] = None) extends TypeParts {
     override val isObject = false
-    def isSubtypeOf(t: Type) : Boolean = parents.exists( p => c.typecheck(p,c.TYPEmode).tpe.<:<(t))
+    override val isClass: Boolean = true
+  }
+
+  case class TraitParts(name: TypeName,
+                        tparams: Seq[Tree],
+                        params: Seq[Tree],
+                        parents: Seq[Tree],
+                        self: Tree,
+                        body: Seq[Tree],
+                        fullName: String,
+                        modifiers: Modifiers,
+                        companion: Option[ObjectParts] = None) extends TypeParts {
+    override val isObject = false
+    override val isClass: Boolean = false
   }
 
   case class ObjectParts(name: TermName,
                          modifiers: Modifiers,
-                         parents: Iterable[Tree],
-                         body: Iterable[Tree],
-                         fullName: String) extends CommonParts {
+                         parents: Seq[Tree],
+                         body: Seq[Tree],
+                         fullName: String,
+                         isCompanion: Boolean = false) extends CommonParts {
     override val isClass: Boolean = false
     override val isCase: Boolean = false
     override val isTrait: Boolean = false
@@ -50,13 +74,13 @@ abstract class WhiteboxMacroTools extends CommonMacroTools {
    *
    * @param classDef
    */
-  def extractClassParts(classDef: ClassDef) : ClassParts = classDef match {
-    case q"$mods class $className(..$fields) extends ..$parents { ..$body }" =>
+  def extractTypeParts(classDef: ClassDef) : TypeParts = classDef match {
+    case q"$mods class $className[..$tparams] $ctorMods(..$params) extends ..$parents { $self => ..$stats }" =>
       val fullName = getEnclosingNamespace().map( ns => s"$ns.$className" ).getOrElse(className.toString)
-      ClassParts(className, fields, parents, body, fullName, mods, true)
-    case q"$mods trait $traitName extends ..$parents { ..$body }" =>
+      ClassParts(className, tparams, params, parents, self, stats, fullName, mods, ctorMods)
+    case q"$mods trait $traitName[..$tparams] extends ..$parents { $self => ..$stats }" =>
       val fullName = getEnclosingNamespace().map( ns => s"$ns.$traitName" ).getOrElse(traitName.toString)
-      ClassParts(traitName, Nil, parents, body, fullName, mods, false)
+      TraitParts(traitName, tparams, Nil, parents, self, stats, fullName, mods)
 
   }
 

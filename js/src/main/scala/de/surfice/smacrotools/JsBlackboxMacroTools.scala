@@ -4,6 +4,4 @@
 // Distributed under the MIT License (see included file LICENSE)
 package de.surfice.smacrotools
 
-abstract class JsBlackboxMacroTools extends BlackboxMacroTools with JsCommonMacroTools {
-
-}
+trait JsBlackboxMacroTools extends BlackboxMacroTools with JsCommonMacroTools

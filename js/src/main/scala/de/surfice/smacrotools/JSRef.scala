@@ -21,8 +21,9 @@ class JSRef(global: String, cjsModule: String, cjsName: String) extends StaticAn
 }
 
 object JSRef {
-   private[smacrotools] class Macro(override val c: whitebox.Context) extends MacroAnnotationHandler(c) with JsWhiteboxMacroTools {
+   private[smacrotools] class Macro(val c: whitebox.Context) extends MacroAnnotationHandler with JsWhiteboxMacroTools {
      import c.universe._
+
 
      private val moduleMode = setting("smacrotools.jsref","global") match {
        case "global" => false
@@ -33,15 +34,18 @@ object JSRef {
      }
 
      override def annotationName: String = "JSRef"
-     override val supportsObjects: Boolean = true
+     override def supportsClasses: Boolean = true
+     override def supportsTraits: Boolean = true
+     override def createCompanion: Boolean = false
+     override def supportsObjects: Boolean = true
 
-     override def modifiedAnnotations(parts: CommonParts): List[c.universe.Tree] = {
+     override def modifiedAnnotations(parts: CommonParts, data: Data): (List[c.universe.Tree],Data) = {
        val params = extractAnnotationParameters(c.prefix.tree,Seq("global","cjsModule","cjsName"))
        val annot =
          if(moduleMode) q"""new scalajs.js.annotation.JSImport(${params("cjsModule").get},${params("cjsName").get})"""
          else q"""new scalajs.js.annotation.JSName(${params("global").get})"""
 
-       parts.modifiers.annotations :+ annot
+       (parts.modifiers.annotations :+ annot,data)
      }
    }
 

@@ -63,12 +63,13 @@ object JSOptionsObject {
     }
 
     def modifiedDeclaration(classDecl: ClassDef) = {
-      val parts = extractClassParts(classDecl)
+      val parts = extractTypeParts(classDecl) match {
+        case classParts: ClassParts if classParts.isClass => classParts
+        case _ =>
+          c.abort(c.enclosingPosition,"Invalid annottee for @JSOptionsObject: only case classes are allowed")
+      }
+
       import parts._
-
-      if(!isCase)
-        c.abort(c.enclosingPosition,"Invalid annottee for @JSOptionsObject: only case classes are allowed")
-
 
       val members = params map {
         case ValDef(mods@JSName(jsname),argname,tpe,rhs) => (ValDef(mods,argname,tpe,rhs),jsname)
