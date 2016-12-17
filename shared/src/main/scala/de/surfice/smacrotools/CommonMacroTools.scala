@@ -62,6 +62,8 @@ abstract class CommonMacroTools {
   protected[this] def findAnnotation(symbol: Symbol, annotation: String): Option[Tree] =
     findAnnotation(symbol.annotations.map(_.tree),annotation)
 
+  // TODO: seems not to work correctly, if the specified annotation name does not match the actual name used for the annotation
+  // (i.e. if the FQN was used as argument, but the simple name was used for the annotation)
   protected[this] def findAnnotation(annotations: Seq[Tree], annotation: String): Option[Tree] =
     annotations.collectFirst{
       case a @ q"new $name( ..$params )" if name.toString == annotation => a
