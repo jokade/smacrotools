@@ -51,6 +51,34 @@ class JSOptionsObject extends StaticAnnotation {
 
 object JSOptionsObject {
 
+//  private[smacrotools] class Macro(val c: whitebox.Context) extends MacroAnnotationHandlerNew {
+//    import c.universe._
+//    override def annotationName: String = "JSOptionsObject"
+//    override def supportsClasses: Boolean = true
+//    override def supportsTraits: Boolean = false
+//    override def supportsObjects: Boolean = false
+//    override def createCompanion: Boolean = true
+//
+//    override def transform: Transformation = {
+//      case cls: ClassTransformData =>
+//        import cls.modParts._
+//        val members = params map {
+//        case ValDef(mods @ JSName(jsname),argname,tpe,rhs) => (ValDef(mods,argname,tpe,rhs),jsname)
+//        case vdef: ValDef => (vdef,vdef.name)
+//      }
+//      val bodyMembers = members map {
+//        case (ValDef(mods,name,tpe,rhs),_) => ValDef(Modifiers(NoFlags,mods.privateWithin,mods.annotations),name,tpe,q"scalajs.js.native")
+//      }
+//
+//      val (argsWithUndefinedDefault, otherArgs) = members.partition( _._1.rhs.toString.endsWith("js.undefined") )
+//
+//      val literalArgs = otherArgs map ( p => q"${p._2} = ${p._1.name}" )
+//      val assignIfDefined = argsWithUndefinedDefault map ( p =>
+//        q"if(${p._1.name}.isDefined) __o.update(${p._2.toString},${p._1.name})")
+//
+//      case x => x
+//    }
+//  }
   private[smacrotools] class Macro(val c: whitebox.Context) extends JsWhiteboxMacroTools {
     private lazy val jsObjectType = c.weakTypeOf[js.Object]
     import c.universe._
@@ -59,7 +87,9 @@ object JSOptionsObject {
 
     def impl(annottees: c.Expr[Any]*) : c.Expr[Any] = annottees.map(_.tree).toList match {
       case (classDecl: ClassDef) :: Nil => modifiedDeclaration(classDecl)
-      case _ => c.abort(c.enclosingPosition, "Invalid annottee for @JSOptionsObject")
+      case x =>
+        println(x)
+        c.abort(c.enclosingPosition, "Invalid annottee for @JSOptionsObject")
     }
 
     def modifiedDeclaration(classDecl: ClassDef) = {

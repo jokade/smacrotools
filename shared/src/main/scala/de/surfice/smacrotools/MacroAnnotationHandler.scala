@@ -11,6 +11,7 @@ package de.surfice.smacrotools
 import de.surfice.smacrotools.debug.DebugConfig
 
 
+@deprecated("Use MacroAnnotationHandlerNew instead","0.0.4")
 abstract class MacroAnnotationHandler extends WhiteboxMacroTools {
   import c.universe._
   type Data = Map[String,Any]

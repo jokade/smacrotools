@@ -70,7 +70,10 @@ abstract class MacroAnnotationHandlerNew extends WhiteboxMacroTools {
   object TransformData {
     def apply(classParts: ClassParts): ClassTransformData = ClassTransformData(classParts,classParts,initData(classParts))
     def apply(objectParts: ObjectParts): ObjectTransformData = ObjectTransformData(objectParts,objectParts,initData(objectParts))
-    def apply(classParts: ClassParts, objectParts: ObjectParts): ClassTransformData = ???
+    def apply(classParts: ClassParts, objectParts: ObjectParts): ClassTransformData = {
+      val parts = classParts.copy(companion = Some(objectParts))
+      ClassTransformData(parts,parts,initData(parts))
+    }
   }
   case class ClassTransformData(origParts: ClassParts, modParts: ClassParts, data: Data) extends TransformData[ClassParts] {
     type U = ClassTransformData
@@ -94,7 +97,6 @@ abstract class MacroAnnotationHandlerNew extends WhiteboxMacroTools {
   def transform: Transformation = x => x
 
   def analyze: Analysis = x => x
-//  def analyze(origParts: CommonParts, data: Data): Data = data
 
 
   private def transformObjectDef: ObjectTransformation = transform andThen {
