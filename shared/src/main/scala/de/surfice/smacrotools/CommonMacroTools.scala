@@ -99,16 +99,25 @@ abstract class CommonMacroTools {
   // TODO: change signature: 'None' will never be returned for an undefined parameter; instead we will recevie the default value
   protected[this] def extractAnnotationParameters(annotation: Tree, paramNames: Seq[String]) : Map[String,Option[Tree]] = annotation match {
     case q"new $name( ..$params )" =>
-      if(paramNames.size < params.size)
+      val vararg = paramNames.last.endsWith("*")
+      if(paramNames.size < params.size && !vararg)
         throw new Exception("received more annotation parameters than defined (check Seq passed to paramNames)!")
       else {
         c.typecheck(annotation.duplicate)
+        val simpleParamNames = if(vararg) paramNames.init else paramNames
         val m = paramNames.map((_, None)).toMap[String, Option[Tree]] ++
-          paramNames.zip(params).map({
+          simpleParamNames.zip(params).map({
             case (name, q"$p = $rhs") => (p.toString, Some(rhs))
             case (name, q"$rhs") => (name, Some(rhs))
-          }).toMap
-        assert( m.keys.forall( k => paramNames.contains(k) ))
+          }).toMap ++
+          (if(vararg) {
+          val varargs = params.drop(simpleParamNames.size) map {
+            case q"$_ = $rhs" => rhs
+            case q"$rhs" => rhs
+          }
+          Map(paramNames.last.dropRight(1) -> Some(q"..$varargs"))
+        } else Map())
+//        assert( m.keys.forall( k => paramNames.contains(k) ))
         m
       }
     case q"new $name()" => paramNames.map( (_,None) ).toMap

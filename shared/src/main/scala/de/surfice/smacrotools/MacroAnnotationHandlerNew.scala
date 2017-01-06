@@ -32,7 +32,7 @@ abstract class MacroAnnotationHandlerNew extends WhiteboxMacroTools {
       case (classDef: ClassDef) :: Nil if supportsClasses||supportsTraits =>
         extractTypeParts(classDef) match {
           case classParts: ClassParts if supportsClasses => transformDef(TransformData(classParts))
-          case traitParts: TraitParts if supportsTraits => ???
+          case traitParts: TraitParts if supportsTraits => transformDef(TransformData(traitParts))
           case _ =>
             c.abort(c.enclosingPosition, s"invalid annottee for @$annotationName")
             (EmptyTree,null)
@@ -60,6 +60,7 @@ abstract class MacroAnnotationHandlerNew extends WhiteboxMacroTools {
     def origParts: T
     def modParts: T
     def data: Data
+//    def updBody[R>:Tree](body: Seq[R]): U
     def updBody(body: Seq[Tree]): U
     def addStatements(stmts: Tree*): U = updBody(modParts.body ++ stmts)
     def updModifiers(modifiers: Modifiers): U
@@ -67,30 +68,47 @@ abstract class MacroAnnotationHandlerNew extends WhiteboxMacroTools {
     def addAnnotations(annots: Tree*): U = updAnnotations(modParts.modifiers.annotations++annots)
     def updParents(parents: Seq[Tree]): U
   }
+  sealed trait TypeTransformData[+T<:TypeParts] extends TransformData[T] {
+    override type U <: TypeTransformData[T]
+    def updCompanion(newCompanion: Option[ObjectParts]): U
+  }
   object TransformData {
     def apply(classParts: ClassParts): ClassTransformData = ClassTransformData(classParts,classParts,initData(classParts))
+    def apply(traitParts: TraitParts): TraitTransformData = TraitTransformData(traitParts,traitParts,initData(traitParts))
     def apply(objectParts: ObjectParts): ObjectTransformData = ObjectTransformData(objectParts,objectParts,initData(objectParts))
     def apply(classParts: ClassParts, objectParts: ObjectParts): ClassTransformData = {
       val parts = classParts.copy(companion = Some(objectParts))
       ClassTransformData(parts,parts,initData(parts))
     }
   }
-  case class ClassTransformData(origParts: ClassParts, modParts: ClassParts, data: Data) extends TransformData[ClassParts] {
+  case class ClassTransformData(origParts: ClassParts, modParts: ClassParts, data: Data) extends TypeTransformData[ClassParts] {
     type U = ClassTransformData
-    def updBody(newBody: Seq[Tree]): ClassTransformData = this.copy(modParts = modParts.copy(body = newBody))
+    override def updBody(newBody: Seq[Tree]): ClassTransformData = this.copy(modParts = modParts.copy(body = newBody))
+//    def updBody[R<:Tree](newBody: Seq[R]): ClassTransformData = this.copy(modParts = modParts.copy(body = newBody))
     override def updModifiers(modifiers: c.universe.Modifiers): ClassTransformData = copy(modParts = modParts.copy(modifiers=modifiers))
-    def updCompanion(newCompanion: Option[ObjectParts]): ClassTransformData = this.copy(modParts = modParts.copy(companion = newCompanion))
+    override def updCompanion(newCompanion: Option[ObjectParts]): ClassTransformData = this.copy(modParts = modParts.copy(companion = newCompanion))
     override def updParents(parents: Seq[Tree]): ClassTransformData = this.copy(modParts = modParts.copy(parents=parents))
   }
   case class ObjectTransformData(origParts: ObjectParts, modParts: ObjectParts, data: Data) extends TransformData[ObjectParts] {
     type U = ObjectTransformData
     override def updModifiers(modifiers: c.universe.Modifiers): ObjectTransformData = copy(modParts = modParts.copy(modifiers=modifiers))
+//    def updBody[R<:Tree](newBody: Seq[R]): ObjectTransformData = this.copy(modParts = modParts.copy(body = newBody))
     override def updBody(newBody: Seq[Tree]): ObjectTransformData = this.copy(modParts = modParts.copy(body = newBody))
     override def updParents(parents: Seq[Tree]): ObjectTransformData = this.copy(modParts = modParts.copy(parents=parents))
+  }
+  case class TraitTransformData(origParts: TraitParts, modParts: TraitParts, data: Data) extends TypeTransformData[TraitParts] {
+    type U = TraitTransformData
+    override def updBody(newBody: Seq[Tree]): TraitTransformData = this.copy(modParts = modParts.copy(body = newBody))
+//    def updBody[R<:Tree](newBody: Seq[R]): TraitTransformData = this.copy(modParts = modParts.copy(body = newBody))
+    override def updModifiers(modifiers: c.universe.Modifiers): TraitTransformData = copy(modParts = modParts.copy(modifiers=modifiers))
+    override def updCompanion(newCompanion: Option[ObjectParts]): TraitTransformData = this.copy(modParts = modParts.copy(companion = newCompanion))
+    override def updParents(parents: Seq[Tree]): TraitTransformData = this.copy(modParts = modParts.copy(parents=parents))
   }
 
   type Transformation = TransformData[CommonParts] => TransformData[CommonParts]
   type ClassTransformation = TransformData[CommonParts] => ClassTransformData
+  type TypeTransformation = TransformData[CommonParts] => TypeTransformData[TypeParts]
+//  type TraitTransformation = TransformData[CommonParts] => TraitTransformData
   type ObjectTransformation = TransformData[CommonParts] => ObjectTransformData
   type Analysis = Tuple2[CommonParts,Data] => Tuple2[CommonParts,Data]
 
@@ -104,21 +122,30 @@ abstract class MacroAnnotationHandlerNew extends WhiteboxMacroTools {
     case _ => ???
   }
 
-  private def transformClassDef: ClassTransformation = transform andThen {
-    case cls: ClassTransformData =>
+  private def ensureCompanion: TypeTransformation = {
+    case cls: TypeTransformData[_] =>
       val origParts = cls.origParts
       import origParts._
       cls.updCompanion((companion match {
-        case None if createCompanion => Some(ObjectParts(name.toTermName,modifiers,Nil,Nil,fullName,true))
+        case None if createCompanion => Some(ObjectParts(name.toTermName,Modifiers(),Nil,Nil,fullName,true))
         case x => x
       }).map(parts => ObjectTransformData(parts,parts,cls.data)).map(transformObjectDef).map(_.modParts))
     case _ => ???
   }
 
-  def transformDef[T<:CommonParts](transformData: TransformData[T]): (Tree,Data) = transformData match {
-    case cls: ClassTransformData =>
+  private def transformClassDef: Transformation = ensureCompanion andThen transform
+
+
+  private def transformDef[T<:CommonParts](transformData: TransformData[T]): (Tree,Data) = transformData match {
+    case cls: TypeTransformData[_] =>
       val tdata = transformClassDef(cls)
-      (classTree(tdata.modParts),tdata.data)
+      tdata match {
+        case ClassTransformData(_,modParts,_) =>
+          (classTree(modParts),tdata.data)
+        case TraitTransformData(_,modParts,_) =>
+          (traitTree(modParts),tdata.data)
+        case _ => ???
+      }
     case obj: ObjectTransformData =>
       val tdata = transformObjectDef(obj)
       (objTree(tdata.modParts),tdata.data)
@@ -135,6 +162,19 @@ abstract class MacroAnnotationHandlerNew extends WhiteboxMacroTools {
                        }"""
     else
       q"""${modifiers} class $name[..$tparams] $ctorMods ( ..$params )
+                       extends ..$parents { $self => ..$body }"""
+  }
+
+  private def traitTree(trt: TraitParts): Tree = {
+    import trt._
+    if(companion.isDefined)
+      q"""{${modifiers} trait $name[..$tparams]
+                       extends ..$parents { $self => ..$body }
+
+                        ${objTree(companion.get)}
+                       }"""
+    else
+      q"""${modifiers} trait $name[..$tparams]
                        extends ..$parents { $self => ..$body }"""
   }
 

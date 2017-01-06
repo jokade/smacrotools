@@ -8,7 +8,15 @@ import scala.reflect.macros.whitebox
 
 abstract class WhiteboxMacroTools extends CommonMacroTools {
   val c: whitebox.Context
+//  import scala.reflect.macros.Universe
   import c.universe._
+
+//  type Tree = Universe#Tree
+//  type Modifiers = Universe#Modifiers
+//  type Type = Universe#Type
+//  type TypeName = Universe#TypeName
+//  type TermName = Universe#TermName
+//  type ClassDef = Universe#ClassDef
 
   sealed trait CommonParts {
     def parents: Seq[Tree]
@@ -91,3 +99,5 @@ abstract class WhiteboxMacroTools extends CommonMacroTools {
   }
 
 }
+
+
