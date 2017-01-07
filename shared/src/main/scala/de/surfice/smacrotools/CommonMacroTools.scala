@@ -92,38 +92,46 @@ abstract class CommonMacroTools {
    * for unspecified parameters.
    *
    * @param annotation complete annotation tree
-   * @param paramNames list with all allowed parameter names (in the correct order)
+   * @param lastArgListNames list with all allowed parameter names for the last argument list (in the correct order)
+   * @param firstArgListNames list with all allowed parameter names for the first argument list (if two arg lists are supported)
    *
    */
   // TODO: check if this function can be used for all (scala) annotations
   // TODO: change signature: 'None' will never be returned for an undefined parameter; instead we will recevie the default value
-  protected[this] def extractAnnotationParameters(annotation: Tree, paramNames: Seq[String]) : Map[String,Option[Tree]] = annotation match {
-    case q"new $name( ..$params )" =>
+  protected[this] def extractAnnotationParameters(annotation: Tree, lastArgListNames: Seq[String], firstArgListNames: Seq[String] = Nil) : Map[String,Option[Tree]] = {
+    def parseAnnotParams(params:Seq[Tree], paramNames: Seq[String]): Map[String,Option[Tree]] = {
       val vararg = paramNames.last.endsWith("*")
-      if(paramNames.size < params.size && !vararg)
+      if (paramNames.size < params.size && !vararg)
         throw new Exception("received more annotation parameters than defined (check Seq passed to paramNames)!")
       else {
         c.typecheck(annotation.duplicate)
-        val simpleParamNames = if(vararg) paramNames.init else paramNames
+        val simpleParamNames = if (vararg) paramNames.init else paramNames
         val m = paramNames.map((_, None)).toMap[String, Option[Tree]] ++
           simpleParamNames.zip(params).map({
             case (name, q"$p = $rhs") => (p.toString, Some(rhs))
             case (name, q"$rhs") => (name, Some(rhs))
           }).toMap ++
-          (if(vararg) {
-          val varargs = params.drop(simpleParamNames.size) map {
-            case q"$_ = $rhs" => rhs
-            case q"$rhs" => rhs
-          }
-          Map(paramNames.last.dropRight(1) -> Some(q"..$varargs"))
-        } else Map())
-//        assert( m.keys.forall( k => paramNames.contains(k) ))
+          (if (vararg) {
+            val varargs = params.drop(simpleParamNames.size) map {
+              case q"$_ = $rhs" => rhs
+              case q"$rhs" => rhs
+            }
+            Map(paramNames.last.dropRight(1) -> Some(q"..$varargs"))
+          } else Map())
+        //        assert( m.keys.forall( k => paramNames.contains(k) ))
         m
       }
-    case q"new $name()" => paramNames.map( (_,None) ).toMap
-    case _ => Map()
-  }
+    }
 
+    annotation match {
+      case q"new $name( ..$params1 )( ..$params2 )" =>
+        parseAnnotParams(params1,firstArgListNames) ++ parseAnnotParams(params2,lastArgListNames)
+      case q"new $name( ..$params )" =>
+        parseAnnotParams(params,lastArgListNames)
+      case q"new $name()" => lastArgListNames.map( (_,None) ).toMap
+      case _ => Map()
+    }
+  }
 
 
   /**

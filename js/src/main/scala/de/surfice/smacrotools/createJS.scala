@@ -56,12 +56,12 @@ object createJS {
         val JS =
           if(isClass)
             q"""@scalajs.js.annotation.ScalaJSDefined
-                class JS extends scalajs.js.Object {
+                class JS[..${tparams.asInstanceOf[Seq[Tree]]}] extends scalajs.js.Object {
                   ..${body.asInstanceOf[Seq[Tree]]}
                 }"""
           else
             q"""@scalajs.js.annotation.ScalaJSDefined
-                trait JS extends scalajs.js.Object {
+                trait JS[..${tparams.asInstanceOf[Seq[Tree]]}] extends scalajs.js.Object {
                   ..${body.asInstanceOf[Seq[Tree]]}
                 }"""
         tpe.updCompanion( companion.map{c =>
