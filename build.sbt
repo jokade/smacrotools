@@ -1,7 +1,7 @@
 
 lazy val commonSettings = Seq(
   organization := "de.surfice",
-  version := "0.0.5-SNAPSHOT",
+  version := "0.0.5",
   name := "smacrotools",
   scalaVersion := "2.11.8",
   scalacOptions ++= Seq("-deprecation","-feature","-Xlint"
@@ -12,7 +12,7 @@ lazy val commonSettings = Seq(
     ),
   addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full),
   resolvers += Resolver.sonatypeRepo("releases"),
-  crossScalaVersions := Seq("2.11.8","2.12.0")
+  crossScalaVersions := Seq("2.11.8","2.12.1")
 )
 
 
