@@ -86,6 +86,15 @@ abstract class CommonMacroTools {
       case a @ q"new $name()" => (name.toString,a)
     }
 
+  protected[this] def findAnnotationTypes(annotations: Seq[Tree]): Seq[(Type,Tree)] =
+    annotations.collect{
+      case a @ q"new $name( ..$params )" => (c.typecheck(name,c.TYPEmode).tpe,a)
+      case a @ q"new $name()" => (c.typecheck(name,c.TYPEmode).tpe,a)
+    }
+
+  protected[this] def hasAnnotation(annotations: Seq[Tree], tpe: Type): Boolean = findAnnotationTypes(annotations)
+    .find(_._1 <:< tpe).isDefined
+
   /**
    * Takes a tree representing an annotation value and a list with the names of all valid parameter names for this
    * annotation (in the correct order), and returns a map containing the tree for each specified parameter, or None
