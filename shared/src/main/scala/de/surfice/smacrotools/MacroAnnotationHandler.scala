@@ -153,7 +153,7 @@ abstract class MacroAnnotationHandler extends WhiteboxMacroTools {
   private def transformClassDef: Transformation = ensureCompanion andThen transform
 
   private val processedAnnotationType = weakTypeOf[MacroAnnotationHandler.processed]
-  private val processedAnnotation = q"new de.surfice.smacrotools.MacroAnnotationHandlerNew.processed"
+  private val processedAnnotation = q"new de.surfice.smacrotools.MacroAnnotationHandler.processed"
 
   private def transformDef[T<:CommonParts](transformData: TransformData[T]): (Tree,Data) = {
     val isProcessed = hasAnnotation(transformData.origParts.modifiers.annotations, processedAnnotationType)
