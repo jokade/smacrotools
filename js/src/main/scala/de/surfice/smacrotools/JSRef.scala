@@ -21,7 +21,7 @@ class JSRef(global: String, cjsModule: String, cjsName: String) extends StaticAn
 }
 
 object JSRef {
-   private[smacrotools] class Macro(val c: whitebox.Context) extends MacroAnnotationHandler with JsWhiteboxMacroTools {
+   private[smacrotools] class Macro(val c: whitebox.Context) extends LegacyMacroAnnotationHandler with JsWhiteboxMacroTools {
      import c.universe._
 
 
