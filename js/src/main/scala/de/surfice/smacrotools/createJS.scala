@@ -39,7 +39,7 @@ class createJS extends StaticAnnotation {
 }
 
 object createJS {
-  private[smacrotools] class Macro(val c: whitebox.Context) extends MacroAnnotationHandlerNew {
+  private[smacrotools] class Macro(val c: whitebox.Context) extends MacroAnnotationHandler {
     import c.universe._
 
     override def annotationName: String = "createJS"
