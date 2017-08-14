@@ -16,6 +16,7 @@ import scala.language.experimental.macros
  * @param cjsName
  */
 @compileTimeOnly("enable macro paradise to expand macro annotations")
+@deprecated("Use @JSImport with scalajs >= 0.6.17","0.0.6")
 class JSRef(global: String, cjsModule: String, cjsName: String) extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro JSRef.Macro.impl
 }

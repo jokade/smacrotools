@@ -48,10 +48,20 @@ abstract class CommonMacroTools {
   /**
    * Takes a tree and returns the fully qualified name of its type.
    *
-   * @param tree
-   * @return
+   * @param tree Tree for which the type is to be evaluated
+   * @param withMacrosDisabled set to true to avoid infinite loops when checking macros
+   * @param dealias Set to true, to de-alias types
+   * @return the fully qualified name of the type
    */
-  protected[this] def getQualifiedTypeName(tree: Tree) : String = c.typecheck(tree,c.TYPEmode).tpe.toString
+  protected[this] def getQualifiedTypeName(tree: Tree,
+                                           withMacrosDisabled: Boolean = false,
+                                           dealias: Boolean = false) : String = {
+    val tpe = c.typecheck(tree,c.TYPEmode,withMacrosDisabled = withMacrosDisabled).tpe
+    if(dealias)
+      tpe.dealias.toString
+    else
+      tpe.toString
+  }
 
   /**
    * Returns the tree for the first annotation of the specified type found on the symbol, or None.
