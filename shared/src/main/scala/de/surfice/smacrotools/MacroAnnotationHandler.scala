@@ -105,6 +105,7 @@ abstract class MacroAnnotationHandler extends WhiteboxMacroTools {
     override def updModifiers(modifiers: c.universe.Modifiers): ClassTransformData = copy(modParts = modParts.copy(modifiers=modifiers))
     override def updCompanion(newCompanion: Option[ObjectParts]): ClassTransformData = this.copy(modParts = modParts.copy(companion = newCompanion))
     override def updParents(parents: Seq[Tree]): ClassTransformData = this.copy(modParts = modParts.copy(parents=parents))
+    def updCtorMods(ctorMods: Modifiers): ClassTransformData = this.copy(modParts = modParts.copy(ctorMods = ctorMods))
   }
   case class ObjectTransformData(origParts: ObjectParts, modParts: ObjectParts, data: Data) extends TransformData[ObjectParts] {
     type U = ObjectTransformData
