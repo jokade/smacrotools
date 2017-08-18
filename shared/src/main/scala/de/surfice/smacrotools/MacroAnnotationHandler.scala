@@ -45,7 +45,7 @@ abstract class MacroAnnotationHandler extends WhiteboxMacroTools {
     }
 
     val debugConfig = data("debugConfig").asInstanceOf[DebugConfig]
-    if(debugConfig.showExpansion) printTree(tree)
+    if(debugConfig.showExpansion) c.info(c.enclosingPosition, showCode(tree), true)
 
     c.Expr[Any](tree)
   }
