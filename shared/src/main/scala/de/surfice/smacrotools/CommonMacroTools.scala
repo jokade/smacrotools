@@ -121,7 +121,7 @@ abstract class CommonMacroTools {
     def parseAnnotParams(params:Seq[Tree], paramNames: Seq[String]): Map[String,Option[Tree]] = {
       val vararg = paramNames.last.endsWith("*")
       if (paramNames.size < params.size && !vararg)
-        throw new Exception("received more annotation parameters than defined (check Seq passed to paramNames)!")
+        throw new Exception("received more annotation parameters than defined (check Seq passed to paramNames; if the last param is a vararg, don't forget to append '*' to the param name)!")
       else {
         c.typecheck(annotation.duplicate)
         val simpleParamNames = if (vararg) paramNames.init else paramNames
@@ -176,6 +176,15 @@ abstract class CommonMacroTools {
     case Literal(Constant(value:String)) => Some(value)
     case x => println(x.getClass)
       None
+  }
+
+  protected[this] def extractStringConstantSeq(arg: Tree): Seq[String] = arg match {
+    case Constant(Literal(value)) => Seq(value.toString)
+    case Literal(Constant(value:String)) => Seq(value)
+    case Block(stats,expr) =>
+      stats.flatMap(extractStringConstant) :+ extractStringConstant(expr).get
+    case x => println(x.getClass)
+      Nil
   }
 
   /**

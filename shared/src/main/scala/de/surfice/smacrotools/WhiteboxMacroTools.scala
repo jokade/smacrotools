@@ -76,17 +76,17 @@ abstract class WhiteboxMacroTools extends CommonMacroTools {
    * @param classDef
    */
   def extractTypeParts(classDef: ClassDef) : TypeParts = classDef match {
-    case q"$mods class $className[..$tparams] $ctorMods(..$params) extends ..$parents { $self => ..$stats }" =>
+    case t @ q"$mods class $className[..$tparams] $ctorMods(..$params) extends ..$parents { $self => ..$stats }" =>
       val fullName = getEnclosingNamespace().map( ns => s"$ns.$className" ).getOrElse(className.toString)
       ClassParts(className, tparams, params, parents, self, stats, fullName, mods, ctorMods)
-    case q"$mods trait $traitName[..$tparams] extends ..$parents { $self => ..$stats }" =>
+    case t @ q"$mods trait $traitName[..$tparams] extends ..$parents { $self => ..$stats }" =>
       val fullName = getEnclosingNamespace().map( ns => s"$ns.$traitName" ).getOrElse(traitName.toString)
       TraitParts(traitName, tparams, Nil, parents, self, stats, fullName, mods)
 
   }
 
   def extractObjectParts(moduleDef: ModuleDef): ObjectParts = moduleDef match {
-    case q"$mods object $objName extends ..$parents { ..$body }" =>
+    case t @ q"$mods object $objName extends ..$parents { ..$body }" =>
       val fullName = getEnclosingNamespace().map(ns => s"$ns.$objName").getOrElse(objName.toString)
       ObjectParts(objName, mods, parents, body, fullName)
   }
