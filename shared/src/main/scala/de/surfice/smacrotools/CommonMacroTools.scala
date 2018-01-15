@@ -46,6 +46,20 @@ abstract class CommonMacroTools {
   }
 
   /**
+   * Returns the type of the specified tree.
+   *
+   * @param tree
+   * @param withMacrosDisabled
+   */
+  def getType(tree: Tree, withMacrosDisabled: Boolean = false): Type =
+    c.typecheck(tree,c.TYPEmode,withMacrosDisabled = withMacrosDisabled).tpe
+//    (tree match {
+//    case _:Select => Some(tree)
+//    case _:AppliedTypeTree => Some(tree)
+//    case x => None
+//  }).map( c.typecheck(_,c.TYPEmode,withMacrosDisabled = withMacrosDisabled).tpe )
+
+  /**
    * Takes a tree and returns the fully qualified name of its type.
    *
    * @param tree Tree for which the type is to be evaluated
@@ -56,7 +70,7 @@ abstract class CommonMacroTools {
   protected[this] def getQualifiedTypeName(tree: Tree,
                                            withMacrosDisabled: Boolean = false,
                                            dealias: Boolean = false) : String = {
-    val tpe = c.typecheck(tree,c.TYPEmode,withMacrosDisabled = withMacrosDisabled).tpe
+    val tpe = getType(tree,withMacrosDisabled)
     if(dealias)
       tpe.dealias.toString
     else
@@ -76,8 +90,8 @@ abstract class CommonMacroTools {
   // (i.e. if the FQN was used as argument, but the simple name was used for the annotation)
   protected[this] def findAnnotation(annotations: Seq[Tree], annotation: String): Option[Tree] =
     annotations.collectFirst{
-      case a @ q"new $name( ..$params )" if name.toString == annotation => a
-      case a @ q"new $name()" if name.toString == annotation => a
+      case a @ q"new $name( ..$params )" if getQualifiedTypeName(name) == annotation => a
+      case a @ q"new $name()" if getQualifiedTypeName(name) == annotation => a
     }
 
   /**

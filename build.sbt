@@ -1,7 +1,7 @@
 
 lazy val commonSettings = Seq(
   organization := "de.surfice",
-  version := "0.0.7-SNAPSHOT",
+  version := "0.0.8-SNAPSHOT",
   name := "smacrotools",
   scalaVersion := "2.11.11",
   scalacOptions ++= Seq("-deprecation","-feature","-Xlint"

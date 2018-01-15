@@ -22,6 +22,7 @@ abstract class WhiteboxMacroTools extends CommonMacroTools {
     def isTrait: Boolean = modifiers.hasFlag(Flag.TRAIT)
     def isSubtypeOf(t: Type) : Boolean = parents.exists( p => c.typecheck(p,c.TYPEmode).tpe.<:<(t))
     val earlyDefns: Iterable[Tree] = Nil
+    def nameString: String
   }
 
   sealed trait TypeParts extends CommonParts {
@@ -29,6 +30,7 @@ abstract class WhiteboxMacroTools extends CommonMacroTools {
     def tparams: Seq[Tree]
     def self: Tree
     def companion: Option[ObjectParts]
+    override def nameString: String = name.toString
   }
 
   case class ClassParts(name: TypeName,
@@ -68,6 +70,7 @@ abstract class WhiteboxMacroTools extends CommonMacroTools {
     override val isCase: Boolean = false
     override val isTrait: Boolean = false
     override val isObject: Boolean = true
+    override def nameString: String = name.toString
   }
 
   /**
