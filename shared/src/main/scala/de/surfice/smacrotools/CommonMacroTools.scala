@@ -51,13 +51,16 @@ abstract class CommonMacroTools {
    * @param tree
    * @param withMacrosDisabled
    */
-  def getType(tree: Tree, withMacrosDisabled: Boolean = false): Type =
-    c.typecheck(tree,c.TYPEmode,withMacrosDisabled = withMacrosDisabled).tpe
-//    (tree match {
-//    case _:Select => Some(tree)
-//    case _:AppliedTypeTree => Some(tree)
-//    case x => None
-//  }).map( c.typecheck(_,c.TYPEmode,withMacrosDisabled = withMacrosDisabled).tpe )
+  def getType(tree: Tree, withMacrosDisabled: Boolean = false): Type = tree match {
+    case AppliedTypeTree(tpt,args) =>
+      val typedArgs = args.map{t =>
+        try{getType(t)}
+        catch{ case _:Throwable => c.universe.WildcardType }
+      }
+      appliedType(c.typecheck(tpt,c.TYPEmode,withMacrosDisabled = withMacrosDisabled).tpe, typedArgs)
+    case _ =>
+      c.typecheck(tree,c.TYPEmode,withMacrosDisabled = withMacrosDisabled).tpe
+  }
 
   /**
    * Takes a tree and returns the fully qualified name of its type.
@@ -90,8 +93,8 @@ abstract class CommonMacroTools {
   // (i.e. if the FQN was used as argument, but the simple name was used for the annotation)
   protected[this] def findAnnotation(annotations: Seq[Tree], annotation: String): Option[Tree] =
     annotations.collectFirst{
-      case a @ q"new $name( ..$params )" if getQualifiedTypeName(name) == annotation => a
-      case a @ q"new $name()" if getQualifiedTypeName(name) == annotation => a
+      case a @ q"new $name( ..$params )" if annotation.endsWith(name.toString()) => a
+      case a @ q"new $name()" if annotation.endsWith(name.toString()) => a
     }
 
   /**

@@ -10,7 +10,6 @@ abstract class WhiteboxMacroTools extends CommonMacroTools {
   val c: whitebox.Context
   import c.universe._
 
-
   sealed trait CommonParts {
     def parents: Seq[Tree]
     def body: Seq[Tree]
