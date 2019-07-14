@@ -41,7 +41,8 @@ abstract class WhiteboxMacroTools extends CommonMacroTools {
                         fullName: String,
                         modifiers: Modifiers,
                         ctorMods: Modifiers,
-                        companion: Option[ObjectParts] = None) extends TypeParts {
+                        companion: Option[ObjectParts] = None,
+                        scndParams: Seq[Tree] = Nil) extends TypeParts {
     override val isObject = false
     override val isClass: Boolean = true
   }
@@ -81,6 +82,9 @@ abstract class WhiteboxMacroTools extends CommonMacroTools {
     case t @ q"$mods class $className[..$tparams] $ctorMods(..$params) extends ..$parents { $self => ..$stats }" =>
       val fullName = getEnclosingNamespace().map( ns => s"$ns.$className" ).getOrElse(className.toString)
       ClassParts(className, tparams, params, parents, self, stats, fullName, mods, ctorMods)
+    case t @ q"$mods class $className[..$tparams] $ctorMods(..$params)(..$scndParams) extends ..$parents { $self => ..$stats }" =>
+      val fullName = getEnclosingNamespace().map( ns => s"$ns.$className" ).getOrElse(className.toString)
+      ClassParts(className, tparams, params, parents, self, stats, fullName, mods, ctorMods,scndParams = scndParams)
     case t @ q"$mods trait $traitName[..$tparams] extends ..$parents { $self => ..$stats }" =>
       val fullName = getEnclosingNamespace().map( ns => s"$ns.$traitName" ).getOrElse(traitName.toString)
       TraitParts(traitName, tparams, Nil, parents, self, stats, fullName, mods)

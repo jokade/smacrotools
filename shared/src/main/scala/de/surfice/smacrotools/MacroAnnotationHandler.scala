@@ -106,6 +106,7 @@ abstract class MacroAnnotationHandler extends WhiteboxMacroTools {
     override def updCompanion(newCompanion: Option[ObjectParts]): ClassTransformData = this.copy(modParts = modParts.copy(companion = newCompanion))
     override def updParents(parents: Seq[Tree]): ClassTransformData = this.copy(modParts = modParts.copy(parents=parents))
     def updCtorParams(params: Seq[Tree]): ClassTransformData = this.copy(modParts = modParts.copy(params=params))
+    def updCtorParams(params: (Seq[Tree],Seq[Tree])): ClassTransformData = this.copy(modParts = modParts.copy(params=params._1, scndParams = params._2))
     def updCtorMods(ctorMods: Modifiers): ClassTransformData = this.copy(modParts = modParts.copy(ctorMods = ctorMods))
   }
   case class ObjectTransformData(origParts: ObjectParts, modParts: ObjectParts, data: Data) extends TransformData[ObjectParts] {
@@ -179,14 +180,25 @@ abstract class MacroAnnotationHandler extends WhiteboxMacroTools {
 
   private def classTree(cls: ClassParts): Tree = {
     import cls._
-    if(companion.isDefined)
-      q"""{${modifiers} class $name[..$tparams] $ctorMods ( ..$params )
+    if(scndParams.isEmpty)
+      if(companion.isDefined)
+        q"""{${modifiers} class $name[..$tparams] $ctorMods ( ..$params )
                        extends ..$parents { $self => ..$body }
 
                         ${objTree(companion.get)}
                        }"""
+      else
+        q"""${modifiers} class $name[..$tparams] $ctorMods ( ..$params )
+                       extends ..$parents { $self => ..$body }"""
     else
-      q"""${modifiers} class $name[..$tparams] $ctorMods ( ..$params )
+      if(companion.isDefined)
+        q"""{${modifiers} class $name[..$tparams] $ctorMods ( ..$params )( ..$scndParams )
+                       extends ..$parents { $self => ..$body }
+
+                        ${objTree(companion.get)}
+                       }"""
+      else
+        q"""${modifiers} class $name[..$tparams] $ctorMods ( ..$params )( ..$scndParams )
                        extends ..$parents { $self => ..$body }"""
   }
 
