@@ -195,6 +195,14 @@ abstract class CommonMacroTools {
       None
   }
 
+  protected[this] def extractBooleanConstant(arg: Tree): Option[Boolean] = arg match {
+    case Constant(Literal(value)) => Some(value.toString.toBoolean)
+    case Literal(Constant(value:Boolean)) => Some(value)
+    case x => println(x.getClass)
+      None
+  }
+
+
   protected[this] def extractStringConstantSeq(arg: Tree): Seq[String] = arg match {
     case Constant(Literal(value)) => Seq(value.toString)
     case Literal(Constant(value:String)) => Seq(value)
